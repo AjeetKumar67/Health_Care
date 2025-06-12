@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block title %}Feedback{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-comments me-2"></i>Feedback</h2>
+        <a href="{% url 'support:feedback_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i>Submit Feedback
+        </a>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="type" class="form-label">Feedback Type</label>
+                    <select name="type" id="type" class="form-select">
+                        <option value="">All Types</option>
+                        {% for code, name in feedback_types %}
+                        <option value="{{ code }}" {% if feedback_type == code %}selected{% endif %}>
+                            {{ name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="resolved" class="form-label">Status</label>
+                    <select name="resolved" id="resolved" class="form-select">
+                        <option value="">All Statuses</option>
+                        <option value="yes" {% if resolved == 'yes' %}selected{% endif %}>Resolved</option>
+                        <option value="no" {% if resolved == 'no' %}selected{% endif %}>Pending</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="search" class="form-label">Search</label>
+                    <input type="text" class="form-control" id="search" name="search" 
+                           value="{{ search_query }}" placeholder="Search feedback...">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Apply Filters</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Feedback List -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Subject</th>
+                            <th>Type</th>
+                            <th>User</th>
+                            <th>Rating</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Resolved By</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in page_obj %}
+                        <tr>
+                            <td><a href="{% url 'support:feedback_detail' item.pk %}">{{ item.subject }}</a></td>
+                            <td>
+                                {% if item.feedback_type == 'COMPLAINT' %}
+                                <span class="badge bg-danger">{{ item.get_feedback_type_display }}</span>
+                                {% elif item.feedback_type == 'SUGGESTION' %}
+                                <span class="badge bg-info">{{ item.get_feedback_type_display }}</span>
+                                {% elif item.feedback_type == 'APPRECIATION' %}
+                                <span class="badge bg-success">{{ item.get_feedback_type_display }}</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ item.get_feedback_type_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ item.user.get_full_name }}</td>
+                            <td>
+                                {% if item.rating %}
+                                <span class="text-warning">
+                                    {% for i in '12345'|make_list %}
+                                    {% if forloop.counter <= item.rating %}
+                                    <i class="fas fa-star"></i>
+                                    {% else %}
+                                    <i class="far fa-star"></i>
+                                    {% endif %}
+                                    {% endfor %}
+                                </span>
+                                {% else %}
+                                <span class="text-muted">No rating</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if item.is_resolved %}
+                                <span class="badge bg-success">Resolved</span>
+                                {% else %}
+                                <span class="badge bg-warning">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ item.created_at|timesince }} ago</td>
+                            <td>
+                                {% if item.resolved_by %}
+                                {{ item.resolved_by.get_full_name }}
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'support:feedback_detail' item.pk %}" class="btn btn-sm btn-info">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center">No feedback found</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if page_obj.paginator.num_pages > 1 %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1">&laquo; First</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                    </li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last &raquo;</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Preserve filters when paginating
+    document.querySelectorAll('.pagination .page-link').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const pageUrl = new URL(this.href);
+            const currentUrl = new URL(window.location.href);
+            const searchParams = new URLSearchParams(currentUrl.search);
+            
+            // Update page parameter while preserving other filters
+            searchParams.set('page', pageUrl.searchParams.get('page'));
+            window.location.href = `${currentUrl.pathname}?${searchParams.toString()}`;
+        });
+    });
+</script>
+{% endblock %}

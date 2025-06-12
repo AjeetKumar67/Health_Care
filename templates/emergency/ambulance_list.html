@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Ambulances - HMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-ambulance me-2"></i>Ambulance Management</h2>
+        <a href="{% url 'emergency:ambulance_create' %}" class="btn btn-warning">
+            <i class="fas fa-plus me-1"></i>Add New Ambulance
+        </a>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-6">
+                    <label for="status" class="form-label">Filter by Status</label>
+                    <select name="status" id="status" class="form-select">
+                        <option value="">All Statuses</option>
+                        {% for status_code, status_name in status_choices %}
+                        <option value="{{ status_code }}" {% if status_filter == status_code %}selected{% endif %}>
+                            {{ status_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label for="search" class="form-label">Search</label>
+                    <input type="text" class="form-control" id="search" name="search" 
+                           value="{{ search_query }}" placeholder="Search ambulances...">
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">Apply Filters</button>
+                    <a href="{% url 'emergency:ambulance_list' %}" class="btn btn-secondary">Clear Filters</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Ambulances Cards -->
+    <div class="row">
+        {% for ambulance in ambulances %}
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">{{ ambulance.vehicle_number }}</h6>
+                    <span class="badge {% if ambulance.status == 'AVAILABLE' %}bg-success
+                                 {% elif ambulance.status == 'ON_CALL' %}bg-warning
+                                 {% else %}bg-danger{% endif %}">
+                        {{ ambulance.get_status_display }}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <p class="mb-1"><strong>Type:</strong> {{ ambulance.vehicle_type }}</p>
+                        <p class="mb-1"><strong>Driver:</strong> {{ ambulance.driver_name }}</p>
+                        <p class="mb-1"><strong>Contact:</strong> {{ ambulance.driver_phone }}</p>
+                        <p class="mb-0">
+                            <strong>Last Maintenance:</strong>
+                            {{ ambulance.last_maintenance|date:"M d, Y" }}
+                        </p>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'emergency:ambulance_edit' ambulance.pk %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-edit me-1"></i>Edit
+                        </a>
+                        {% if ambulance.status == 'AVAILABLE' %}
+                        <a href="{% url 'emergency:ambulance_call_create' %}?ambulance={{ ambulance.pk }}" 
+                           class="btn btn-warning btn-sm">
+                            <i class="fas fa-phone-alt me-1"></i>Dispatch
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center">
+                    No ambulances found.
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - HMS{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <h2 class="h3">
+            <i class="fas fa-tachometer-alt text-primary me-2"></i>
+            Welcome, {{ user.get_full_name }}!
+        </h2>
+        <p class="text-muted">
+            You are logged in as {{ user.get_user_type_display }}
+        </p>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Quick Stats -->
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-calendar-check text-primary me-2"></i>
+                    Upcoming Events
+                </h5>
+                <p class="card-text">
+                    {% if user.user_type == 'DOCTOR' and upcoming_appointments %}
+                        <ul class="list-unstyled">
+                        {% for appointment in upcoming_appointments %}
+                            <li class="mb-2">
+                                <i class="fas fa-user-clock text-muted me-1"></i>
+                                {{ appointment.appointment_date|date:"M d, Y" }} - {{ appointment.patient.get_full_name }}
+                            </li>
+                        {% endfor %}
+                        </ul>
+                    {% elif user.user_type == 'PATIENT' and appointments %}
+                        <ul class="list-unstyled">
+                        {% for appointment in appointments %}
+                            <li class="mb-2">
+                                <i class="fas fa-stethoscope text-muted me-1"></i>
+                                {{ appointment.appointment_date|date:"M d, Y" }} - Dr. {{ appointment.doctor.get_full_name }}
+                            </li>
+                        {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted">No upcoming events</p>
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-tasks text-primary me-2"></i>
+                    Quick Actions
+                </h5>
+                <div class="list-group">
+                    {% if user.user_type == 'PATIENT' %}
+                        <a href="{% url 'appointments:book_appointment' %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-calendar-plus me-2"></i>Book Appointment
+                        </a>
+                        <a href="{% url 'appointments:my_appointments' %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-calendar-alt me-2"></i>My Appointments
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action">
+                            <i class="fas fa-file-medical me-2"></i>View Medical Records
+                        </a>
+                    {% elif user.user_type == 'DOCTOR' %}
+                        <a href="#" class="list-group-item list-group-item-action">
+                            <i class="fas fa-calendar me-2"></i>View Schedule
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action">
+                            <i class="fas fa-user-injured me-2"></i>Patient List
+                        </a>
+                    {% elif user.user_type == 'ADMIN' %}
+                        <a href="#" class="list-group-item list-group-item-action">
+                            <i class="fas fa-user-md me-2"></i>Manage Staff
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action">
+                            <i class="fas fa-cog me-2"></i>System Settings
+                        </a>
+                    {% endif %}
+                    <a href="{% url 'users:profile' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-user-edit me-2"></i>Update Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Updates -->
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-bell text-primary me-2"></i>
+                    System Updates
+                </h5>
+                {% if user.user_type == 'ADMIN' and recent_activities %}
+                    <div class="list-group">
+                    {% for activity in recent_activities|slice:":5" %}
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ activity.action }}</h6>
+                                <small>{{ activity.timestamp|timesince }} ago</small>
+                            </div>
+                            <p class="mb-1">{{ activity.user.get_full_name }}</p>
+                            <small class="text-muted">{{ activity.details }}</small>
+                        </div>
+                    {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">No recent updates</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

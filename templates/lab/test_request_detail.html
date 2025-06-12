@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+
+{% block title %}Test Request Details - HMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Test Request Details</h1>
+        <a href="{% url 'lab:test_request_list' %}" class="d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
+            <i class="fas fa-arrow-left fa-sm text-white-50"></i> Back to List
+        </a>
+    </div>
+
+    <div class="row">
+        <!-- Test Request Information -->
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Request Information</h6>
+                    <span class="badge badge-{% if test_request.status == 'COMPLETED' %}success
+                        {% elif test_request.status == 'IN_PROGRESS' %}info
+                        {% elif test_request.status == 'REQUESTED' %}warning
+                        {% elif test_request.status == 'CANCELLED' %}danger
+                        {% else %}secondary{% endif %} px-3 py-2">
+                        {{ test_request.get_status_display }}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Request ID:</strong><br>{{ test_request.request_id }}</p>
+                            <p><strong>Requested Date:</strong><br>{{ test_request.requested_date|date:"M d, Y H:i" }}</p>
+                            <p><strong>Requested By:</strong><br>{{ test_request.requested_by.get_full_name }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Sample Collection:</strong><br>
+                                {% if test_request.sample_collection_date %}
+                                    {{ test_request.sample_collection_date|date:"M d, Y H:i" }}
+                                {% else %}
+                                    Not collected yet
+                                {% endif %}
+                            </p>
+                            <p><strong>Result Date:</strong><br>
+                                {% if test_request.result_date %}
+                                    {{ test_request.result_date|date:"M d, Y H:i" }}
+                                {% else %}
+                                    Not completed yet
+                                {% endif %}
+                            </p>
+                            <p><strong>Technician:</strong><br>
+                                {% if test_request.technician %}
+                                    {{ test_request.technician.user.get_full_name }}
+                                {% else %}
+                                    Not assigned
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Notes -->
+                    {% if test_request.notes %}
+                    <div class="mt-3">
+                        <strong>Notes:</strong>
+                        <p class="mb-0">{{ test_request.notes }}</p>
+                    </div>
+                    {% endif %}
+
+                    <!-- Action Buttons -->
+                    <div class="mt-4">
+                        {% if test_request.status == 'REQUESTED' %}
+                        <a href="{% url 'lab:collect_sample' test_request.request_id %}" class="btn btn-warning">
+                            <i class="fas fa-vial mr-1"></i> Collect Sample
+                        </a>
+                        {% endif %}
+                        
+                        {% if test_request.status == 'SAMPLE_COLLECTED' or test_request.status == 'IN_PROGRESS' %}
+                        <a href="{% url 'lab:enter_test_result' test_request.request_id %}" class="btn btn-success">
+                            <i class="fas fa-clipboard-check mr-1"></i> Enter Results
+                        </a>
+                        {% endif %}
+
+                        <!-- Status Update Form -->
+                        <form method="post" action="{% url 'lab:update_test_status' test_request.request_id %}" class="d-inline">
+                            {% csrf_token %}
+                            <div class="input-group mt-3">
+                                <select class="custom-select" name="status">
+                                    {% for status, label in test_request.STATUS_CHOICES %}
+                                    <option value="{{ status }}" {% if status == test_request.status %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-primary" type="submit">Update Status</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Patient and Test Information -->
+        <div class="col-lg-6">
+            <!-- Patient Information -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Patient Information</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Name:</strong><br>{{ test_request.patient.user.get_full_name }}</p>
+                            <p><strong>Patient ID:</strong><br>{{ test_request.patient.patient_id }}</p>
+                            <p><strong>Gender:</strong><br>{{ test_request.patient.get_gender_display }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Blood Group:</strong><br>{{ test_request.patient.blood_group }}</p>
+                            <p><strong>Phone:</strong><br>{{ test_request.patient.phone }}</p>
+                            <p><strong>Age:</strong><br>{{ test_request.patient.date_of_birth|timesince|slice:":2" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Test Information -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Test Information</h6>
+                </div>
+                <div class="card-body">
+                    <p><strong>Test Name:</strong><br>{{ test_request.test.name }}</p>
+                    <p><strong>Category:</strong><br>{{ test_request.test.category.name }}</p>
+                    <p><strong>Price:</strong><br>${{ test_request.test.price }}</p>
+                    <p><strong>Delivery Time:</strong><br>{{ test_request.test.report_delivery_time }} hours</p>
+                    
+                    {% if test_request.test.preparation_instructions %}
+                    <div class="mt-3">
+                        <strong>Preparation Instructions:</strong>
+                        <p class="mb-0">{{ test_request.test.preparation_instructions }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Test Results -->
+    {% if test_result or test_request.status == 'COMPLETED' %}
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Test Results</h6>
+        </div>
+        <div class="card-body">
+            {% if test_result %}
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Result Value:</strong><br>{{ test_result.result_value }}</p>
+                    <p><strong>Reference Range:</strong><br>{{ test_result.reference_range }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Interpretation:</strong><br>{{ test_result.interpretation }}</p>
+                    {% if test_result.remarks %}
+                    <p><strong>Remarks:</strong><br>{{ test_result.remarks }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="mt-3">
+                <p><strong>Performed By:</strong> {{ test_result.performed_by.get_full_name }}</p>
+                <p><strong>Result Date:</strong> {{ test_result.created_at|date:"M d, Y H:i" }}</p>
+            </div>
+            {% else %}
+            <p class="text-center mb-0">Results have not been entered yet.</p>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %}Ticket {{ ticket.ticket_id }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Ticket Details -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-ticket-alt me-2"></i>Ticket {{ ticket.ticket_id }}
+                        </h5>
+                        {% if user.is_staff %}
+                        <a href="{% url 'support:ticket_edit' ticket.ticket_id %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-edit me-1"></i>Edit Ticket
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    <h4>{{ ticket.subject }}</h4>
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <small class="text-muted">Category</small>
+                            <p class="mb-0">{{ ticket.category.name }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <small class="text-muted">Priority</small>
+                            <p class="mb-0">
+                                {% if ticket.priority == 'URGENT' %}
+                                <span class="badge bg-danger">{{ ticket.get_priority_display }}</span>
+                                {% elif ticket.priority == 'HIGH' %}
+                                <span class="badge bg-warning">{{ ticket.get_priority_display }}</span>
+                                {% elif ticket.priority == 'MEDIUM' %}
+                                <span class="badge bg-info">{{ ticket.get_priority_display }}</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ ticket.get_priority_display }}</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-4">
+                            <small class="text-muted">Status</small>
+                            <p class="mb-0">
+                                {% if ticket.status == 'NEW' %}
+                                <span class="badge bg-primary">{{ ticket.get_status_display }}</span>
+                                {% elif ticket.status == 'ASSIGNED' %}
+                                <span class="badge bg-info">{{ ticket.get_status_display }}</span>
+                                {% elif ticket.status == 'IN_PROGRESS' %}
+                                <span class="badge bg-warning">{{ ticket.get_status_display }}</span>
+                                {% elif ticket.status == 'ON_HOLD' %}
+                                <span class="badge bg-secondary">{{ ticket.get_status_display }}</span>
+                                {% elif ticket.status == 'RESOLVED' %}
+                                <span class="badge bg-success">{{ ticket.get_status_display }}</span>
+                                {% else %}
+                                <span class="badge bg-danger">{{ ticket.get_status_display }}</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <small class="text-muted">Raised By</small>
+                            <p class="mb-0">{{ ticket.raised_by.get_full_name }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <small class="text-muted">Assigned To</small>
+                            <p class="mb-0">
+                                {% if ticket.assigned_to %}
+                                {{ ticket.assigned_to.get_full_name }}
+                                {% else %}
+                                <span class="text-muted">Unassigned</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-4">
+                            <small class="text-muted">Created</small>
+                            <p class="mb-0">{{ ticket.created_at|date:"M d, Y H:i" }}</p>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <h6>Description</h6>
+                        <p class="mb-0">{{ ticket.description|linebreaks }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ticket Responses -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-comments me-2"></i>Responses
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for response in responses %}
+                    <div class="d-flex mb-4">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-user-circle fa-2x text-secondary"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ response.responded_by.get_full_name }}</strong>
+                                    <small class="text-muted ms-2">{{ response.created_at|timesince }} ago</small>
+                                </div>
+                                {% if response.attachment %}
+                                <a href="{{ response.attachment.url }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                    <i class="fas fa-paperclip me-1"></i>Attachment
+                                </a>
+                                {% endif %}
+                            </div>
+                            <p class="mb-0">{{ response.response|linebreaks }}</p>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-center text-muted mb-0">No responses yet</p>
+                    {% endfor %}
+
+                    <form method="post" enctype="multipart/form-data" class="mt-4">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="{{ response_form.response.id_for_label }}" class="form-label">
+                                Add Response
+                            </label>
+                            {{ response_form.response }}
+                            {% if response_form.response.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ response_form.response.errors|join:", " }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ response_form.attachment.id_for_label }}" class="form-label">
+                                Attachment
+                            </label>
+                            {{ response_form.attachment }}
+                            {% if response_form.attachment.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ response_form.attachment.errors|join:", " }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane me-1"></i>Submit Response
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <!-- Staff Update Form -->
+            {% if user.is_staff and update_form %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-cog me-2"></i>Update Ticket
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'support:ticket_edit' ticket.ticket_id %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="{{ update_form.assigned_to.id_for_label }}" class="form-label">
+                                Assigned To
+                            </label>
+                            {{ update_form.assigned_to }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ update_form.status.id_for_label }}" class="form-label">
+                                Status
+                            </label>
+                            {{ update_form.status }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ update_form.priority.id_for_label }}" class="form-label">
+                                Priority
+                            </label>
+                            {{ update_form.priority }}
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-save me-1"></i>Update Ticket
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

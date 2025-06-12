@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Equipment - Infrastructure Management{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-tools me-2"></i>Equipment Management</h2>
+        <a href="{% url 'infrastructure:equipment_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i>Add New Equipment
+        </a>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label for="type" class="form-label">Filter by Type</label>
+                    <select name="type" id="type" class="form-select">
+                        <option value="">All Types</option>
+                        {% for type_code, type_name in equipment_types %}
+                        <option value="{{ type_code }}" {% if type_filter == type_code %}selected{% endif %}>
+                            {{ type_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="location" class="form-label">Filter by Location</label>
+                    <select name="location" id="location" class="form-select">
+                        <option value="">All Locations</option>
+                        {% for ward in wards %}
+                        <option value="{{ ward.id }}" {% if location_filter == ward.id|stringformat:"s" %}selected{% endif %}>
+                            {{ ward.name }} ({{ ward.building.name }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="search" class="form-label">Search</label>
+                    <input type="text" class="form-control" id="search" name="search" 
+                           value="{{ search_query }}" placeholder="Search equipment...">
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">Apply Filters</button>
+                    <a href="{% url 'infrastructure:equipment_list' %}" class="btn btn-secondary">Clear Filters</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Equipment List -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Serial Number</th>
+                            <th>Location</th>
+                            <th>Next Maintenance</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in page_obj %}
+                        <tr class="{% if item.next_maintenance <= today %}table-warning{% endif %}">
+                            <td>{{ item.name }}</td>
+                            <td>{{ item.get_equipment_type_display }}</td>
+                            <td>{{ item.serial_number }}</td>
+                            <td>{{ item.location.name }} ({{ item.location.building.name }})</td>
+                            <td>
+                                {{ item.next_maintenance }}
+                                {% if item.next_maintenance <= today %}
+                                <span class="badge bg-warning">Due</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ item.status }}</td>
+                            <td>
+                                <a href="{% url 'infrastructure:equipment_detail' item.pk %}" 
+                                   class="btn btn-sm btn-outline-info">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{% url 'infrastructure:equipment_edit' item.pk %}" 
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'infrastructure:maintenance_create' %}?equipment={{ item.pk }}" 
+                                   class="btn btn-sm btn-outline-success">
+                                    <i class="fas fa-wrench"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center">No equipment found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1">&laquo; First</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+            </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <li class="page-item active">
+                <span class="page-link">{{ num }}</span>
+            </li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+            </li>
+            {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last &raquo;</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Preserve filters when paginating
+    document.querySelectorAll('.pagination .page-link').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const pageUrl = new URL(this.href);
+            const currentUrl = new URL(window.location.href);
+            const searchParams = new URLSearchParams(currentUrl.search);
+            
+            // Update page parameter
+            searchParams.set('page', pageUrl.searchParams.get('page'));
+            window.location.href = `${currentUrl.pathname}?${searchParams.toString()}`;
+        });
+    });
+</script>
+{% endblock %}

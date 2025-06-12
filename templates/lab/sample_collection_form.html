@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Sample Collection - HMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">Sample Collection</h6>
+            <a href="{% url 'lab:test_request_detail' test_request.request_id %}" class="btn btn-secondary btn-sm">
+                <i class="fas fa-arrow-left mr-1"></i> Back to Request
+            </a>
+        </div>
+        <div class="card-body">
+            <!-- Test Request Info -->
+            <div class="alert alert-info mb-4">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h5 class="alert-heading">Test Information</h5>
+                        <p class="mb-1"><strong>Test:</strong> {{ test_request.test.name }}</p>
+                        <p class="mb-0"><strong>Category:</strong> {{ test_request.test.category.name }}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h5 class="alert-heading">Patient Information</h5>
+                        <p class="mb-1"><strong>Name:</strong> {{ test_request.patient.user.get_full_name }}</p>
+                        <p class="mb-0"><strong>ID:</strong> {{ test_request.patient.patient_id }}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h5 class="alert-heading">Request Details</h5>
+                        <p class="mb-1"><strong>Request ID:</strong> {{ test_request.request_id }}</p>
+                        <p class="mb-0"><strong>Date:</strong> {{ test_request.requested_date|date:"M d, Y" }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preparation Instructions -->
+            {% if test_request.test.preparation_instructions %}
+            <div class="alert alert-warning mb-4">
+                <h5 class="alert-heading">Preparation Instructions</h5>
+                <p class="mb-0">{{ test_request.test.preparation_instructions }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Sample Collection Form -->
+            <form method="post" novalidate>
+                {% csrf_token %}
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        {{ form.sample_collection_date|as_crispy_field }}
+                    </div>
+                    <div class="col-md-6">
+                        {{ form.notes|as_crispy_field }}
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-vial mr-1"></i> Record Sample Collection
+                    </button>
+                    <a href="{% url 'lab:test_request_detail' test_request.request_id %}" class="btn btn-secondary">
+                        <i class="fas fa-times mr-1"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

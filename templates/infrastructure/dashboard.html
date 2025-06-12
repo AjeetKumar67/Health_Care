@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Infrastructure Dashboard - HMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Infrastructure Dashboard</h1>
+        <div>
+            <a href="{% url 'infrastructure:building_create' %}" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+                <i class="fas fa-building fa-sm text-white-50"></i> Add New Building
+            </a>
+            <a href="{% url 'infrastructure:equipment_create' %}" class="d-none d-sm-inline-block btn btn-sm btn-success shadow-sm ml-2">
+                <i class="fas fa-tools fa-sm text-white-50"></i> Add New Equipment
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row">
+        <!-- Total Buildings Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Buildings</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_buildings }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-building fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Wards Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Total Wards</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_wards }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-door-open fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Available Beds Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Available Beds</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ available_beds }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-bed fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Maintenance Due Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Maintenance Due</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ maintenance_due }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-tools fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions and Ward Stats -->
+    <div class="row">
+        <!-- Quick Actions -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Quick Actions</h6>
+                </div>
+                <div class="card-body">
+                    <a href="{% url 'infrastructure:building_list' %}" class="btn btn-primary mr-2 mb-2">
+                        <i class="fas fa-building mr-1"></i> Manage Buildings
+                    </a>
+                    <a href="{% url 'infrastructure:ward_list' %}" class="btn btn-info mr-2 mb-2">
+                        <i class="fas fa-door-open mr-1"></i> Manage Wards
+                    </a>
+                    <a href="{% url 'infrastructure:bed_list' %}" class="btn btn-success mr-2 mb-2">
+                        <i class="fas fa-bed mr-1"></i> Manage Beds
+                    </a>
+                    <a href="{% url 'infrastructure:equipment_list' %}" class="btn btn-warning mr-2 mb-2">
+                        <i class="fas fa-tools mr-1"></i> Manage Equipment
+                    </a>
+                    <a href="{% url 'infrastructure:maintenance_list' %}" class="btn btn-danger mr-2 mb-2">
+                        <i class="fas fa-wrench mr-1"></i> Maintenance Records
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ward Status -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Ward Occupancy</h6>
+                </div>
+                <div class="card-body">
+                    {% for ward in wards %}
+                    <h4 class="small font-weight-bold">
+                        {{ ward.name }}
+                        <span class="float-right">{{ ward.available_beds }}/{{ ward.total_beds }}</span>
+                    </h4>
+                    <div class="progress mb-4">
+                        <div class="progress-bar" role="progressbar" 
+                             style="width: {{ ward.available_beds|div:ward.total_beds|mul:100 }}%"></div>
+                    </div>
+                    {% empty %}
+                    <p class="text-center mb-0">No wards found.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Equipment Due Maintenance and Recent Records -->
+    <div class="row">
+        <!-- Equipment Due Maintenance -->
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Equipment Due Maintenance</h6>
+                    <a href="{% url 'infrastructure:equipment_list' %}?maintenance=due" class="btn btn-sm btn-primary">
+                        View All
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Equipment</th>
+                                    <th>Location</th>
+                                    <th>Due Date</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for equipment in equipment_due_maintenance %}
+                                <tr>
+                                    <td>{{ equipment.name }}</td>
+                                    <td>{{ equipment.location.name }}</td>
+                                    <td>{{ equipment.next_maintenance|date:"M d, Y" }}</td>
+                                    <td>
+                                        <a href="{% url 'infrastructure:maintenance_create' %}?equipment={{ equipment.id }}" 
+                                           class="btn btn-sm btn-warning">
+                                            <i class="fas fa-wrench"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center">No equipment due for maintenance.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Maintenance Records -->
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Recent Maintenance Records</h6>
+                    <a href="{% url 'infrastructure:maintenance_list' %}" class="btn btn-sm btn-primary">
+                        View All
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Equipment</th>
+                                    <th>Date</th>
+                                    <th>Performed By</th>
+                                    <th>Next Due</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for record in recent_maintenance %}
+                                <tr>
+                                    <td>{{ record.equipment.name }}</td>
+                                    <td>{{ record.maintenance_date|date:"M d, Y" }}</td>
+                                    <td>{{ record.performed_by }}</td>
+                                    <td>{{ record.next_maintenance|date:"M d, Y" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center">No recent maintenance records.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Wards - HMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Wards</h1>
+        <a href="{% url 'infrastructure:ward_create' %}" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+            <i class="fas fa-plus fa-sm text-white-50"></i> Add New Ward
+        </a>
+    </div>
+
+    <!-- Search & Filter Card -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Search & Filter</h6>
+        </div>
+        <div class="card-body">
+            <form method="get" class="form-inline justify-content-center">
+                <div class="input-group mb-2 mr-sm-2">
+                    <input type="text" class="form-control" name="search" placeholder="Search wards..."
+                           value="{{ search_query }}">
+                </div>
+                <select class="custom-select mb-2 mr-sm-2" name="building">
+                    <option value="">All Buildings</option>
+                    {% for building in buildings %}
+                    <option value="{{ building.id }}" {% if building.id|stringformat:"i" == building_filter %}selected{% endif %}>
+                        {{ building.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <select class="custom-select mb-2 mr-sm-2" name="type">
+                    <option value="">All Types</option>
+                    {% for type_code, type_name in ward_types %}
+                    <option value="{{ type_code }}" {% if type_code == type_filter %}selected{% endif %}>
+                        {{ type_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <button class="btn btn-primary mb-2" type="submit">
+                    <i class="fas fa-search fa-sm"></i> Search
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Wards List -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Available Wards</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Building</th>
+                            <th>Type</th>
+                            <th>Floor</th>
+                            <th>Capacity</th>
+                            <th>Available Beds</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ward in page_obj %}
+                        <tr>
+                            <td>{{ ward.name }}</td>
+                            <td>{{ ward.building.name }}</td>
+                            <td>{{ ward.get_ward_type_display }}</td>
+                            <td>{{ ward.floor }}</td>
+                            <td>{{ ward.total_beds }}</td>
+                            <td>{{ ward.available_beds }}</td>
+                            <td>
+                                <a href="{% url 'infrastructure:ward_detail' ward.id %}" class="btn btn-info btn-sm">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{% url 'infrastructure:ward_edit' ward.id %}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'infrastructure:bed_create' %}?ward={{ ward.id }}" class="btn btn-success btn-sm">
+                                    <i class="fas fa-plus"></i> Add Bed
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center">No wards found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if building_filter %}&building={{ building_filter }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% for i in page_obj.paginator.page_range %}
+                    <li class="page-item {% if page_obj.number == i %}active{% endif %}">
+                        <a class="page-link" href="?page={{ i }}{% if search_query %}&search={{ search_query }}{% endif %}{% if building_filter %}&building={{ building_filter }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}">{{ i }}</a>
+                    </li>
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if building_filter %}&building={{ building_filter }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ title }} - HMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">{{ title }}</h6>
+            {% if patient %}
+                <a href="{% url 'patients:patient_detail' patient.patient_id %}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-arrow-left mr-1"></i> Back to Details
+                </a>
+            {% else %}
+                <a href="{% url 'patients:patient_list' %}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-arrow-left mr-1"></i> Back to List
+                </a>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data" novalidate>
+                {% csrf_token %}
+                
+                <div class="row">
+                    <!-- Personal Information -->
+                    <div class="col-md-6">
+                        <h5 class="mb-3">Personal Information</h5>
+                        {{ form.gender|as_crispy_field }}
+                        {{ form.date_of_birth|as_crispy_field }}
+                        {{ form.blood_group|as_crispy_field }}
+                        {{ form.phone|as_crispy_field }}
+                        {{ form.address|as_crispy_field }}
+                    </div>
+                    
+                    <!-- Emergency Contact and Medical Information -->
+                    <div class="col-md-6">
+                        <h5 class="mb-3">Emergency Contact</h5>
+                        {{ form.emergency_contact_name|as_crispy_field }}
+                        {{ form.emergency_contact_phone|as_crispy_field }}
+                        
+                        <h5 class="mt-4 mb-3">Medical Information</h5>
+                        {{ form.medical_history|as_crispy_field }}
+                        {{ form.allergies|as_crispy_field }}
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save mr-1"></i> Save Patient Details
+                    </button>
+                    {% if patient %}
+                        <a href="{% url 'patients:patient_detail' patient.patient_id %}" class="btn btn-secondary">
+                            <i class="fas fa-times mr-1"></i> Cancel
+                        </a>
+                    {% else %}
+                        <a href="{% url 'patients:patient_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-times mr-1"></i> Cancel
+                        </a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

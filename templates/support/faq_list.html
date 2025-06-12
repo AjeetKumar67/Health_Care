@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}FAQ{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-question-circle me-2"></i>FAQ</h2>
+        {% if user.is_staff %}
+        <a href="{% url 'support:faq_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i>Create FAQ
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label for="category" class="form-label">Category</label>
+                    <select name="category" id="category" class="form-select">
+                        <option value="">All Categories</option>
+                        {% for category in categories %}
+                        <option value="{{ category.id }}" {% if category_filter == category.id|stringformat:"s" %}selected{% endif %}>
+                            {{ category.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label for="search" class="form-label">Search</label>
+                    <input type="text" class="form-control" id="search" name="search" 
+                           value="{{ search_query }}" placeholder="Search FAQ...">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Apply Filters</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- FAQ List -->
+    <div class="card">
+        <div class="card-body">
+            <div class="accordion" id="faqAccordion">
+                {% regroup faqs by category as category_list %}
+                {% for category in category_list %}
+                <div class="card mb-3">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">{{ category.grouper.name }}</h5>
+                    </div>
+                    <div class="card-body">
+                        {% for faq in category.list %}
+                        <div class="mb-3">
+                            <h6 class="d-flex justify-content-between align-items-center">
+                                <a class="text-decoration-none text-dark" data-bs-toggle="collapse" 
+                                   href="#faq{{ faq.pk }}" role="button" aria-expanded="false">
+                                    <i class="fas fa-chevron-right me-2"></i>{{ faq.question }}
+                                </a>
+                                <div>
+                                    {% if not faq.is_published %}
+                                    <span class="badge bg-warning me-2">Draft</span>
+                                    {% endif %}
+                                    {% if user.is_staff %}
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'support:faq_edit' faq.pk %}" class="btn btn-outline-primary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'support:faq_toggle_publish' faq.pk %}" class="btn btn-outline-warning">
+                                            <i class="fas {% if faq.is_published %}fa-eye-slash{% else %}fa-eye{% endif %}"></i>
+                                        </a>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </h6>
+                            <div class="collapse" id="faq{{ faq.pk }}">
+                                <div class="card card-body bg-light">
+                                    {{ faq.answer|linebreaks }}
+                                    <small class="text-muted mt-2">
+                                        Last updated {{ faq.updated_at|timesince }} ago
+                                        {% if user.is_staff %}
+                                        by {{ faq.created_by.get_full_name }}
+                                        {% endif %}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p class="text-center text-muted mb-0">No FAQs found in this category</p>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-center text-muted mb-0">No FAQs found</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .accordion .card-header h5 {
+        color: #0d6efd;
+        font-weight: 600;
+    }
+    .accordion .collapse {
+        transition: all 0.2s ease;
+    }
+    .accordion a[aria-expanded="true"] i.fa-chevron-right {
+        transform: rotate(90deg);
+    }
+    .accordion i.fa-chevron-right {
+        transition: transform 0.2s ease;
+    }
+</style>
+{% endblock %}

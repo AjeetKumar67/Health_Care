@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+
+{% block title %}Test Requests - HMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Test Requests</h1>
+        <a href="{% url 'lab:test_request_create' %}" class="d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+            <i class="fas fa-plus fa-sm text-white-50"></i> New Test Request
+        </a>
+    </div>
+
+    <!-- Filters Card -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Search & Filter</h6>
+        </div>
+        <div class="card-body">
+            <form method="get" class="form-inline justify-content-center">
+                <div class="input-group mb-2 mr-sm-2">
+                    <input type="text" class="form-control" name="search" placeholder="Search by ID, patient, or test..."
+                           value="{{ search_query }}">
+                </div>
+                <select class="custom-select mb-2 mr-sm-2" name="status">
+                    <option value="">All Status</option>
+                    {% for status, label in test_request.STATUS_CHOICES %}
+                    <option value="{{ status }}" {% if status == status_filter %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <button class="btn btn-primary mb-2" type="submit">
+                    <i class="fas fa-search fa-sm"></i> Search
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Test Requests List -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Test Requests</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Request ID</th>
+                            <th>Patient</th>
+                            <th>Test</th>
+                            <th>Status</th>
+                            <th>Requested Date</th>
+                            <th>Technician</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for request in page_obj %}
+                        <tr>
+                            <td>{{ request.request_id }}</td>
+                            <td>{{ request.patient.user.get_full_name }}</td>
+                            <td>{{ request.test.name }}</td>
+                            <td>
+                                <span class="badge badge-{% if request.status == 'COMPLETED' %}success
+                                    {% elif request.status == 'IN_PROGRESS' %}info
+                                    {% elif request.status == 'REQUESTED' %}warning
+                                    {% elif request.status == 'CANCELLED' %}danger
+                                    {% else %}secondary{% endif %}">
+                                    {{ request.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ request.requested_date|date:"M d, Y H:i" }}</td>
+                            <td>
+                                {% if request.technician %}
+                                    {{ request.technician.user.get_full_name }}
+                                {% else %}
+                                    Not Assigned
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'lab:test_request_detail' request.request_id %}" class="btn btn-info btn-sm">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                {% if request.status == 'REQUESTED' %}
+                                <a href="{% url 'lab:collect_sample' request.request_id %}" class="btn btn-warning btn-sm">
+                                    <i class="fas fa-vial"></i>
+                                </a>
+                                {% endif %}
+                                {% if request.status == 'SAMPLE_COLLECTED' or request.status == 'IN_PROGRESS' %}
+                                <a href="{% url 'lab:enter_test_result' request.request_id %}" class="btn btn-success btn-sm">
+                                    <i class="fas fa-clipboard-check"></i>
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center">No test requests found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% for i in page_obj.paginator.page_range %}
+                    <li class="page-item {% if page_obj.number == i %}active{% endif %}">
+                        <a class="page-link" href="?page={{ i }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">{{ i }}</a>
+                    </li>
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

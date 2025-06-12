@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %}Support Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">Total Tickets</h6>
+                            <h2 class="mb-0">{{ total_tickets }}</h2>
+                        </div>
+                        <i class="fas fa-ticket-alt fa-2x"></i>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <a class="small text-white stretched-link" href="{% url 'support:ticket_list' %}">View Details</a>
+                    <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">Open Tickets</h6>
+                            <h2 class="mb-0">{{ open_tickets }}</h2>
+                        </div>
+                        <i class="fas fa-exclamation-circle fa-2x"></i>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <a class="small text-white stretched-link" href="{% url 'support:ticket_list' %}?status=NEW,ASSIGNED,IN_PROGRESS">View Details</a>
+                    <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">My Tickets</h6>
+                            <h2 class="mb-0">{{ my_tickets }}</h2>
+                        </div>
+                        <i class="fas fa-user-circle fa-2x"></i>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <a class="small text-white stretched-link" href="{% url 'support:ticket_list' %}">View Details</a>
+                    <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">Feedback</h6>
+                            <h2 class="mb-0">{{ feedback_count }}</h2>
+                        </div>
+                        <i class="fas fa-comments fa-2x"></i>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <a class="small text-white stretched-link" href="{% url 'support:feedback_list' %}">View Details</a>
+                    <div class="small text-white"><i class="fas fa-angle-right"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">Recent Support Tickets</h6>
+                        <a href="{% url 'support:ticket_create' %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus me-1"></i>Create Ticket
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Ticket ID</th>
+                                    <th>Subject</th>
+                                    <th>Category</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ticket in recent_tickets %}
+                                <tr>
+                                    <td><a href="{% url 'support:ticket_detail' ticket.ticket_id %}">{{ ticket.ticket_id }}</a></td>
+                                    <td>{{ ticket.subject }}</td>
+                                    <td>{{ ticket.category.name }}</td>
+                                    <td>
+                                        {% if ticket.status == 'NEW' %}
+                                        <span class="badge bg-primary">{{ ticket.get_status_display }}</span>
+                                        {% elif ticket.status == 'ASSIGNED' %}
+                                        <span class="badge bg-info">{{ ticket.get_status_display }}</span>
+                                        {% elif ticket.status == 'IN_PROGRESS' %}
+                                        <span class="badge bg-warning">{{ ticket.get_status_display }}</span>
+                                        {% elif ticket.status == 'ON_HOLD' %}
+                                        <span class="badge bg-secondary">{{ ticket.get_status_display }}</span>
+                                        {% elif ticket.status == 'RESOLVED' %}
+                                        <span class="badge bg-success">{{ ticket.get_status_display }}</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">{{ ticket.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ ticket.created_at|timesince }} ago</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center">No recent tickets</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">Recent Feedback</h6>
+                        <a href="{% url 'support:feedback_create' %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus me-1"></i>Submit Feedback
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% for feedback in recent_feedback %}
+                    <div class="d-flex mb-3">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-comment-alt fa-2x text-secondary"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0">{{ feedback.subject }}</h6>
+                            <small class="text-muted">{{ feedback.user.get_full_name }} - {{ feedback.created_at|timesince }} ago</small>
+                            <br>
+                            <span class="badge bg-{{ feedback.is_resolved|yesno:'success,warning' }}">
+                                {{ feedback.is_resolved|yesno:'Resolved,Pending' }}
+                            </span>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-center text-muted mb-0">No recent feedback</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">Support Categories</h6>
+                        {% if user.is_staff %}
+                        <a href="{% url 'support:category_create' %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus me-1"></i>Add Category
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% for category in categories %}
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h6 class="mb-0">{{ category.name }}</h6>
+                            <small class="text-muted">{{ category.ticket_count }} tickets</small>
+                        </div>
+                        {% if user.is_staff %}
+                        <a href="{% url 'support:category_edit' category.pk %}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% empty %}
+                    <p class="text-center text-muted mb-0">No categories defined</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

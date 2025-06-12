@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Infrastructure Management{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-wrench me-2"></i>{{ title }}
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label for="{{ form.equipment.id_for_label }}" class="form-label">
+                                        {{ form.equipment.label }}
+                                    </label>
+                                    {{ form.equipment }}
+                                    {% if form.equipment.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.equipment.errors|join:", " }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.maintenance_date.id_for_label }}" class="form-label">
+                                        {{ form.maintenance_date.label }}
+                                    </label>
+                                    {{ form.maintenance_date }}
+                                    {% if form.maintenance_date.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.maintenance_date.errors|join:", " }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.next_maintenance.id_for_label }}" class="form-label">
+                                        {{ form.next_maintenance.label }}
+                                    </label>
+                                    {{ form.next_maintenance }}
+                                    {% if form.next_maintenance.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.next_maintenance.errors|join:", " }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.performed_by.id_for_label }}" class="form-label">
+                                        {{ form.performed_by.label }}
+                                    </label>
+                                    {{ form.performed_by }}
+                                    {% if form.performed_by.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.performed_by.errors|join:", " }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.cost.id_for_label }}" class="form-label">
+                                        {{ form.cost.label }}
+                                    </label>
+                                    {{ form.cost }}
+                                    {% if form.cost.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.cost.errors|join:", " }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">
+                                {{ form.description.label }}
+                            </label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.description.errors|join:", " }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>Save Maintenance Record
+                            </button>
+                            <a href="{% url 'infrastructure:maintenance_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-1"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Style form fields */
+    form input, form select, form textarea {
+        width: 100%;
+        padding: 0.375rem 0.75rem;
+        font-size: 1rem;
+        font-weight: 400;
+        line-height: 1.5;
+        color: #212529;
+        background-color: #fff;
+        border: 1px solid #ced4da;
+        border-radius: 0.25rem;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+
+    form input:focus, form select:focus, form textarea:focus {
+        color: #212529;
+        background-color: #fff;
+        border-color: #86b7fe;
+        outline: 0;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+
+    form .invalid-feedback {
+        color: #dc3545;
+        font-size: 80%;
+        margin-top: 0.25rem;
+    }
+</style>
+{% endblock %}

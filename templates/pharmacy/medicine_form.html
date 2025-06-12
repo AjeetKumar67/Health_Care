@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ title }} - HMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">{{ title }}</h6>
+        </div>
+        <div class="card-body">
+            <form method="post" novalidate>
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-6">
+                        {{ form.name|as_crispy_field }}
+                        {{ form.generic_name|as_crispy_field }}
+                        {{ form.manufacturer|as_crispy_field }}
+                        {{ form.dosage_form|as_crispy_field }}
+                    </div>
+                    <div class="col-md-6">
+                        {{ form.strength|as_crispy_field }}
+                        {{ form.price|as_crispy_field }}
+                        {{ form.stock_quantity|as_crispy_field }}
+                        {{ form.reorder_level|as_crispy_field }}
+                    </div>
+                    <div class="col-12">
+                        {{ form.description|as_crispy_field }}
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save mr-1"></i> Save Medicine
+                    </button>
+                    <a href="{% url 'pharmacy:medicine_list' %}" class="btn btn-secondary">
+                        <i class="fas fa-times mr-1"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

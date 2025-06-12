@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}Beds - Infrastructure Management{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-bed me-2"></i>Bed Management</h2>
+        <a href="{% url 'infrastructure:bed_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i>Add New Bed
+        </a>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label for="ward" class="form-label">Filter by Ward</label>
+                    <select name="ward" id="ward" class="form-select">
+                        <option value="">All Wards</option>
+                        {% for ward in wards %}
+                        <option value="{{ ward.id }}" {% if ward_filter == ward.id|stringformat:"s" %}selected{% endif %}>
+                            {{ ward.name }} ({{ ward.building.name }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="status" class="form-label">Filter by Status</label>
+                    <select name="status" id="status" class="form-select">
+                        <option value="">All Statuses</option>
+                        {% for status_code, status_name in status_choices %}
+                        <option value="{{ status_code }}" {% if status_filter == status_code %}selected{% endif %}>
+                            {{ status_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="search" class="form-label">Search</label>
+                    <input type="text" class="form-control" id="search" name="search" 
+                           value="{{ search_query }}" placeholder="Search beds...">
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">Apply Filters</button>
+                    <a href="{% url 'infrastructure:bed_list' %}" class="btn btn-secondary">Clear Filters</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Beds List -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Bed Number</th>
+                            <th>Ward</th>
+                            <th>Building</th>
+                            <th>Status</th>
+                            <th>Price/Day</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for bed in page_obj %}
+                        <tr>
+                            <td>{{ bed.bed_number }}</td>
+                            <td>{{ bed.ward.name }}</td>
+                            <td>{{ bed.ward.building.name }}</td>
+                            <td>
+                                <span class="badge {% if bed.status == 'AVAILABLE' %}bg-success
+                                             {% elif bed.status == 'OCCUPIED' %}bg-danger
+                                             {% elif bed.status == 'MAINTENANCE' %}bg-warning
+                                             {% else %}bg-info{% endif %}">
+                                    {{ bed.get_status_display }}
+                                </span>
+                            </td>
+                            <td>${{ bed.price_per_day }}</td>
+                            <td>
+                                <a href="{% url 'infrastructure:bed_edit' bed.pk %}" 
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center">No beds found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1">&laquo; First</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+            </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <li class="page-item active">
+                <span class="page-link">{{ num }}</span>
+            </li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+            </li>
+            {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last &raquo;</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Preserve filters when paginating
+    document.querySelectorAll('.pagination .page-link').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const pageUrl = new URL(this.href);
+            const currentUrl = new URL(window.location.href);
+            const searchParams = new URLSearchParams(currentUrl.search);
+            
+            // Update page parameter
+            searchParams.set('page', pageUrl.searchParams.get('page'));
+            window.location.href = `${currentUrl.pathname}?${searchParams.toString()}`;
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Emergency Dashboard - HMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Emergency Department</h1>
+        <div>
+            <a href="{% url 'emergency:case_create' %}" class="d-none d-sm-inline-block btn btn-sm btn-danger shadow-sm">
+                <i class="fas fa-plus fa-sm text-white-50"></i> Register Emergency Case
+            </a>
+            <a href="{% url 'emergency:ambulance_call_create' %}" class="d-none d-sm-inline-block btn btn-sm btn-warning shadow-sm ml-2">
+                <i class="fas fa-ambulance fa-sm text-white-50"></i> Dispatch Ambulance
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row">
+        <!-- Today's Cases Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Today's Cases</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ today_cases }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-procedures fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Critical Cases Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Critical Cases</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ critical_cases }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-heartbeat fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ER Bed Occupancy Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">ER Bed Occupancy</div>
+                            <div class="row no-gutters align-items-center">
+                                <div class="col-auto">
+                                    <div class="h5 mb-0 mr-3 font-weight-bold text-gray-800">
+                                        {{ occupied_beds }}/{{ total_er_beds }}
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="progress progress-sm mr-2">
+                                        <div class="progress-bar bg-info" role="progressbar"
+                                            style="width: {{ bed_occupancy }}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-bed fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Available Ambulances Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Available Ambulances</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ available_ambulances }}/{{ total_ambulances }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-ambulance fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Current Cases and Active Calls -->
+    <div class="row">
+        <!-- Current Cases -->
+        <div class="col-xl-8 col-lg-7">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Current Cases</h6>
+                    <a href="{% url 'emergency:case_list' %}" class="btn btn-sm btn-primary">
+                        View All
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Case ID</th>
+                                    <th>Patient</th>
+                                    <th>Severity</th>
+                                    <th>Status</th>
+                                    <th>Doctor</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for case in active_cases %}
+                                <tr>
+                                    <td>{{ case.case_id }}</td>
+                                    <td>
+                                        {% if case.patient %}
+                                        {{ case.patient.full_name }}
+                                        {% else %}
+                                        <span class="text-muted">Unidentified</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if case.severity == 'CRITICAL' %}bg-danger
+                                                     {% elif case.severity == 'SEVERE' %}bg-warning
+                                                     {% elif case.severity == 'MODERATE' %}bg-info
+                                                     {% else %}bg-success{% endif %}">
+                                            {{ case.get_severity_display }}
+                                        </span>
+                                    </td>
+                                    <td>{{ case.get_status_display }}</td>
+                                    <td>
+                                        {% if case.attending_doctor %}
+                                        Dr. {{ case.attending_doctor.full_name }}
+                                        {% else %}
+                                        <span class="text-muted">Unassigned</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'emergency:case_detail' case.pk %}" 
+                                           class="btn btn-sm btn-info">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'emergency:case_edit' case.pk %}" 
+                                           class="btn btn-sm btn-primary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center">No active cases.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Ambulance Calls -->
+        <div class="col-xl-4 col-lg-5">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Active Ambulance Calls</h6>
+                    <a href="{% url 'emergency:ambulance_call_list' %}" class="btn btn-sm btn-primary">
+                        View All
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% for call in active_calls %}
+                    <div class="border-bottom py-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="mb-1">{{ call.call_id }}</h5>
+                                <p class="mb-1">
+                                    <i class="fas fa-ambulance text-warning"></i>
+                                    {{ call.ambulance.vehicle_number }}
+                                </p>
+                                <small class="text-muted">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    {{ call.pickup_location }}
+                                </small>
+                            </div>
+                            <div>
+                                <a href="{% url 'emergency:ambulance_call_edit' call.pk %}" 
+                                   class="btn btn-sm btn-warning">
+                                    Update
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-center mb-0">No active ambulance calls.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

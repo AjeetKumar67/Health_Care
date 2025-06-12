@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>{{ title }}</h2>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.patient.id_for_label }}" class="form-label">
+                            Patient
+                        </label>
+                        {{ form.patient }}
+                        {% if form.patient.errors %}
+                        <div class="text-danger">
+                            {{ form.patient.errors.0 }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.due_date.id_for_label }}" class="form-label">
+                            Due Date
+                        </label>
+                        {{ form.due_date }}
+                        {% if form.due_date.errors %}
+                        <div class="text-danger">
+                            {{ form.due_date.errors.0 }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.discount.id_for_label }}" class="form-label">
+                            Discount Amount
+                        </label>
+                        {{ form.discount }}
+                        {% if form.discount.errors %}
+                        <div class="text-danger">
+                            {{ form.discount.errors.0 }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.tax.id_for_label }}" class="form-label">
+                            Tax Amount
+                        </label>
+                        {{ form.tax }}
+                        {% if form.tax.errors %}
+                        <div class="text-danger">
+                            {{ form.tax.errors.0 }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.notes.id_for_label }}" class="form-label">
+                        Notes
+                    </label>
+                    {{ form.notes }}
+                    {% if form.notes.errors %}
+                    <div class="text-danger">
+                        {{ form.notes.errors.0 }}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="text-end mt-4">
+                    <a href="{% url 'billing:invoice_list' %}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Create Invoice</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

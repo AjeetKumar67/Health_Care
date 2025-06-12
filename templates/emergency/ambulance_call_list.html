@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Ambulance Calls - HMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-phone-alt me-2"></i>Ambulance Calls</h2>
+        <a href="{% url 'emergency:ambulance_call_create' %}" class="btn btn-warning">
+            <i class="fas fa-plus me-1"></i>New Call
+        </a>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-6">
+                    <label for="status" class="form-label">Filter by Status</label>
+                    <select name="status" id="status" class="form-select">
+                        <option value="">All Calls</option>
+                        <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active Calls</option>
+                        <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed Calls</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label for="search" class="form-label">Search</label>
+                    <input type="text" class="form-control" id="search" name="search" 
+                           value="{{ search_query }}" placeholder="Search calls...">
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">Apply Filters</button>
+                    <a href="{% url 'emergency:ambulance_call_list' %}" class="btn btn-secondary">Clear Filters</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Ambulance Calls -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Call ID</th>
+                            <th>Ambulance</th>
+                            <th>Pickup Location</th>
+                            <th>Dispatch Time</th>
+                            <th>Status</th>
+                            <th>Duration</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for call in page_obj %}
+                        <tr>
+                            <td>{{ call.call_id }}</td>
+                            <td>
+                                {{ call.ambulance.vehicle_number }}
+                                <br>
+                                <small class="text-muted">{{ call.ambulance.driver_name }}</small>
+                            </td>
+                            <td>{{ call.pickup_location }}</td>
+                            <td>{{ call.dispatch_time|date:"M d, Y H:i" }}</td>
+                            <td>
+                                {% if call.return_time %}
+                                <span class="badge bg-success">Completed</span>
+                                {% else %}
+                                <span class="badge bg-warning">Active</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if call.return_time %}
+                                {{ call.dispatch_time|timesince:call.return_time }}
+                                {% else %}
+                                {{ call.dispatch_time|timesince }} (ongoing)
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'emergency:ambulance_call_edit' call.pk %}" 
+                                   class="btn btn-sm btn-primary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center">No ambulance calls found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1">&laquo; First</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+            </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <li class="page-item active">
+                <span class="page-link">{{ num }}</span>
+            </li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+            </li>
+            {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last &raquo;</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Preserve filters when paginating
+    document.querySelectorAll('.pagination .page-link').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const pageUrl = new URL(this.href);
+            const currentUrl = new URL(window.location.href);
+            const searchParams = new URLSearchParams(currentUrl.search);
+            
+            // Update page parameter while preserving other filters
+            searchParams.set('page', pageUrl.searchParams.get('page'));
+            window.location.href = `${currentUrl.pathname}?${searchParams.toString()}`;
+        });
+    });
+</script>
+{% endblock %}
